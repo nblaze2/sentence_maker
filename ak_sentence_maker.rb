@@ -3,7 +3,7 @@ NOUNS = ["abcd", "c", "def", "h", "ij", "cde"]
 VERBS = ["bc", "fg", "g", "hij", "bcd"]
 ARTICLES = ["a", "ac", "e"]
 DICTIONARY = NOUNS + VERBS + ARTICLES
-
+NOT_VERBS = NOUNS + ARTICLES
 def sentence_maker(input)
   sentences = []
   potential_sentences = []
@@ -36,20 +36,47 @@ def sentence_maker(input)
           if first_word.include?(word)
             front = first_word.partition(word)
             sentence.shift
-            sentence.unshift(back)
+            sentence.unshift(front)
             potential_sentences << sentence.flatten
             break
           end
         end
       else
-        partials << sentence
+        NOT_VERBS.each do |word|
+          first_word = sentence.first
+          last_word = sentence.last
+          if first_word.include?(word)
+            front = first_word.partition(word)
+            sentence.shift
+            sentence.unshift(front)
+            potential_sentences << sentence.flatten
+            break
+          elsif last_word.include?(word)
+            back = last_word.partition(word)
+            sentence.pop
+            sentence.push(back)
+            potential_sentences << sentence.flatten
+            break
+          end
+        end
       end
     end
   end
-  puts "done: #{potential_sentences.inspect}"
-  puts "front: #{front_partials.inspect}"
-  puts "back: #{back_partials.inspect}"
-  puts "partial: #{partials.inspect}"
+  potential_sentences.each do |sentence|
+    sentence.delete_if { |word| word == "" }
+    if sentence.all? { |word| DICTIONARY.include?(word) }
+      s_verbs = VERBS.select { |verb| sentence.include?(verb) }
+      s_nouns = NOUNS.select { |noun| sentence.include?(noun) }
+      s_articles = ARTICLES.select { |article| sentence.include?(article) }
+      verb_count = s_verbs.length
+      noun_count = s_nouns.length
+      article_count = s_articles.length
+      if verb_count > 0 && (noun_count > 0 || article_count > 1)
+        sentences << sentence.join(" ")
+      end
+    end
+  end
+  puts "done: #{sentences.inspect}"
 end
 
 puts '---------------------------------------'
